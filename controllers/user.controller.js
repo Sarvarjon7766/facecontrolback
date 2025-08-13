@@ -2,7 +2,6 @@ const userService = require('../services/user.service')
 const UserService = require('../services/user.service')
 const path = require('path')
 
-const { faceapi, canvas } = require('../middlewares/faceApiMiddleware')
 
 class UserController {
 	async register(req, res) {
