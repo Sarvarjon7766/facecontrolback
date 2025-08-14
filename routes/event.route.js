@@ -2,6 +2,6 @@ const express = require('express')
 const router = express.Router()
 const { checkInAttandance } = require('../controllers/attandance.controller')
 
-router.post('/', checkInAttandance)
+router.post('/hik', checkInAttandance)
 
 module.exports = router
