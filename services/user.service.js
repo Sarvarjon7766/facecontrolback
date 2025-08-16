@@ -231,7 +231,8 @@ class UserService {
 			console.error("getAll xatolik:", error)
 			return { success: false, message: "Server xatosi" }
 		}
-	}
+	}    
+
 
 
 
