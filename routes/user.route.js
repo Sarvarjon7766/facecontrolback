@@ -1,5 +1,5 @@
 const express = require('express')
-const { register, auth, getAll, getById, getUser, update,getAllpost,updatepost,registerpost } = require('../controllers/user.controller')
+const { register, auth, getAll, getById, getUser, update, getAllpost, updatepost, registerpost, getLavel } = require('../controllers/user.controller')
 const { attendanceGetOne } = require('../controllers/attandance.controller')
 const verifyToken = require('../middlewares/verifyToken')
 const upload = require('../middlewares/upload')
@@ -15,6 +15,7 @@ router.get('/getUser', verifyToken, getUser)
 router.get('/getAll', verifyToken, getAll)
 router.get('/getAllpost', verifyToken, getAllpost)
 router.get('/getById/:id', verifyToken, getById)
+router.get('/getLavel', verifyToken, getLavel)
 router.get('/attandance/:id', verifyToken, attendanceGetOne)
 
 

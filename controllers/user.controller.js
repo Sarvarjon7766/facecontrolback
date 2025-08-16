@@ -108,8 +108,6 @@ class UserController {
 			})
 		}
 	}
-
-
 	async auth(req, res) {
 		try {
 			const result = await userService.auth(req.body)
@@ -173,6 +171,21 @@ class UserController {
 	async getById(req, res) {
 		try {
 			const result = await userService.getById(req.params.id)
+			if (result.success) {
+				return res.status(200).json(result)
+			} else {
+				return res.status(400).json(result)
+			}
+		} catch (error) {
+			return res.status(500).json({
+				success: false,
+				message: "Server xatosi"
+			})
+		}
+	}
+	async getLavel(req, res) {
+		try {
+			const result = await userService.getLavel()
 			if (result.success) {
 				return res.status(200).json(result)
 			} else {

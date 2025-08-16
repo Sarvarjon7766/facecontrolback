@@ -19,7 +19,7 @@ const userSchema = new Schema({
 	},
 	role: {
 		type: String,
-		enum: ['admin', 'viewer','post'],
+		enum: ['admin', 'viewer', 'post'],
 		default: 'viewer'
 	},
 	createdBy: {
@@ -50,6 +50,23 @@ const userSchema = new Schema({
 		type: String,
 		required: true,
 		default: 123456
+	},
+	lavel: {
+		type: Number,
+		required: true,
+	},
+	birthday: {
+		type: Date
+	},
+	phone_personal: {
+		type: String
+	},
+	phone_work: {
+		type: String
+	},
+	isEdit: {
+		type: Boolean,
+		default: false
 	}
 }, {
 	timestamps: true

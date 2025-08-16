@@ -2,6 +2,7 @@ const userModel = require('../models/user.model')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const attandanceModel = require('../models/attandance.model')
+const attandanceLogModel = require('../models/attandance.log.model')
 
 class UserService {
 	async register(data, id) {
@@ -161,22 +162,54 @@ class UserService {
 			// Barcha foydalanuvchilar
 			const users = await userModel.find().populate('department')
 
-			// Bugungi davomat yozuvlari
+			// Bugungi attendance
 			const attendances = await attandanceModel.find({
 				date: { $gte: startOfDay, $lte: endOfDay }
 			})
 
-			// Attendance Map tuzish
+			// Bugungi har bir userning oxirgi va birinchi check-in vaqti
+			const logs = await attandanceLogModel.aggregate([
+				{
+					$match: {
+						date: { $gte: startOfDay, $lte: endOfDay }
+					}
+				},
+				{ $sort: { date: -1 } }, // eng oxirgi oldinda
+				{
+					$group: {
+						_id: "$user",
+						lastCheckInTime: { $first: "$checkInTime" },
+						lastCheckOutTime: { $first: "$checkOutTime" },
+						lastComment: { $first: "$comment" },
+						firstCheckInTime: { $last: "$checkInTime" } // eng birinchi check-in
+					}
+				}
+			])
+
+			// Loglarni map ko‘rinishga o‘tkazish
+			const logMap = logs.reduce((map, log) => {
+				map[log._id.toString()] = {
+					lastCheckInTime: log.lastCheckInTime,
+					lastCheckOutTime: log.lastCheckOutTime,
+					lastComment: log.lastComment,
+					firstCheckInTime: log.firstCheckInTime
+				}
+				return map
+			}, {})
+
+			// Attendance map
 			const attendanceMap = attendances.reduce((map, a) => {
 				map[a.user.toString()] = a
 				return map
 			}, {})
 
-			// Har bir foydalanuvchiga status qo‘shish
-			const usersWithAttendance = users.map(user => {
-				const attendance = attendanceMap[user._id.toString()]
-				let attendanceStatus = "kelmagan"
+			// Userlarga ma'lumotlarni bog‘lash
+			const usersWithData = users.map(user => {
+				const userIdStr = user._id.toString()
+				const attendance = attendanceMap[userIdStr]
+				const logData = logMap[userIdStr] || {}
 
+				let attendanceStatus = "kelmagan"
 				if (attendance) {
 					if (attendance.status === "tashqarida") attendanceStatus = "tashqarida"
 					else if (attendance.status === "ishda") attendanceStatus = "ishda"
@@ -185,17 +218,22 @@ class UserService {
 
 				return {
 					...user.toObject(),
-					attendanceStatus
+					attendanceStatus,
+					lastCheckInTime: logData.lastCheckInTime || null,
+					lastCheckOutTime: logData.lastCheckOutTime || null,
+					lastComment: logData.lastComment || null,
+					firstCheckInTime: logData.firstCheckInTime || null
 				}
 			})
 
-			return { success: true, users: usersWithAttendance }
-
+			return { success: true, users: usersWithData }
 		} catch (error) {
 			console.error("getAll xatolik:", error)
 			return { success: false, message: "Server xatosi" }
 		}
 	}
+
+
 
 	async getAllpost() {
 		try {
@@ -275,8 +313,17 @@ class UserService {
 			return { success: false, message: "Server xatosi", error: error.message }
 		}
 	}
-
-
+	async getLavel() {
+		try {
+			const users = await userModel.find()
+			if (!users.length) return { success: false, message: "Foydalanuvchi topilmadi" }
+			const lavel = users.reduce((max, user) => user.lavel > max ? user.lavel : max, 0)
+			return { success: true, lavel: lavel + 1 }
+		} catch (error) {
+			console.error("Lavelni olish xatolik:", error)
+			return { success: false, message: "Server xatosi", error: error.message }
+		}
+	}
 
 	async attandance(id) {
 		try {
